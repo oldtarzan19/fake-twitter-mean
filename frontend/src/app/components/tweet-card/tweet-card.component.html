@@ -1,0 +1,25 @@
+<article class="tweet-card">
+  <header class="tweet-header">
+    <div class="author">
+      <a [routerLink]="['/profile', tweet.author._id]" class="username">@{{ tweet.author.username }}</a>
+      <span class="meta">· {{ tweet.createdAt | date: 'short' }}</span>
+    </div>
+    <button type="button" class="delete" *ngIf="canDelete || auth.user()?.role === 'admin' || auth.user()?._id === tweet.author._id" (click)="onDeleteClick()">
+      Törlés
+    </button>
+  </header>
+
+  <p class="content">{{ tweet.content }}</p>
+
+  <footer class="tweet-footer" *ngIf="showActions">
+    <button type="button" class="action" (click)="onLikeClick()">
+      {{ tweet.liked ? 'Unlike' : 'Like' }} · {{ tweet.likesCount }}
+    </button>
+    <button type="button" class="action" (click)="onRetweetClick()">
+      {{ tweet.retweeted ? 'Unretweet' : 'Retweet' }} · {{ tweet.retweetsCount }}
+    </button>
+    <a class="action" [routerLink]="['/tweet', tweet._id]">
+      Részletek · {{ tweet.commentsCount }}
+    </a>
+  </footer>
+</article>

@@ -1,0 +1,50 @@
+<div class="auth-wrapper">
+  <section class="auth-card">
+    <header class="auth-header">
+      <h1>Fake Twitter</h1>
+      <p>Jelentkezz be vagy hozz létre új fiókot.</p>
+    </header>
+
+    <div class="mode-switch">
+      <button type="button" [class.active]="isLogin()" (click)="switchMode('login')">Bejelentkezés</button>
+      <button type="button" [class.active]="!isLogin()" (click)="switchMode('register')">Regisztráció</button>
+    </div>
+
+    <form [formGroup]="isLogin() ? loginForm : registerForm" (ngSubmit)="submit()">
+      <div class="form-field">
+        <label for="email">E-mail cím</label>
+        <input id="email" type="email" formControlName="email" autocomplete="email" />
+        <small class="error" *ngIf="(isLogin() ? loginForm : registerForm).controls.email.invalid && ((isLogin() ? loginForm : registerForm).controls.email.dirty || (isLogin() ? loginForm : registerForm).controls.email.touched)">
+          Érvényes e-mail címet adj meg.
+        </small>
+      </div>
+
+      <div class="form-field" *ngIf="!isLogin()">
+        <label for="username">Felhasználónév</label>
+        <input id="username" type="text" formControlName="username" autocomplete="username" />
+        <small class="error" *ngIf="registerForm.controls.username.invalid && (registerForm.controls.username.dirty || registerForm.controls.username.touched)">
+          A felhasználónév 3-32 karakter között legyen.
+        </small>
+      </div>
+
+      <div class="form-field">
+        <label for="password">Jelszó</label>
+        <input id="password" type="password" formControlName="password" autocomplete="current-password" />
+        <small class="error" *ngIf="(isLogin() ? loginForm : registerForm).controls.password.invalid && ((isLogin() ? loginForm : registerForm).controls.password.dirty || (isLogin() ? loginForm : registerForm).controls.password.touched)">
+          A jelszónak legalább 6 karakterből kell állnia.
+        </small>
+      </div>
+
+      <div class="form-field" *ngIf="!isLogin()">
+        <label for="bio">Bemutatkozás</label>
+        <textarea id="bio" rows="3" formControlName="bio" placeholder="Pár szó magadról"></textarea>
+      </div>
+
+      <p class="error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+      <button type="submit" [disabled]="loading()">
+        {{ loading() ? 'Folyamatban...' : (isLogin() ? 'Belépés' : 'Regisztráció') }}
+      </button>
+    </form>
+  </section>
+</div>

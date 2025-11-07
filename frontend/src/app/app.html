@@ -1,0 +1,19 @@
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" routerLink="/">Fake Twitter</a>
+    <nav class="nav-links" *ngIf="user(); else guestLinks">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Feed</a>
+      <a [routerLink]="['/profile', user()?._id]" routerLinkActive="active">Profile</a>
+      <a routerLink="/admin" routerLinkActive="active" *ngIf="isAdmin()">Admin</a>
+      <button type="button" class="logout" (click)="logout()">Kilépés</button>
+    </nav>
+    <ng-template #guestLinks>
+      <nav class="nav-links">
+        <a routerLink="/login" routerLinkActive="active">Belépés</a>
+      </nav>
+    </ng-template>
+  </header>
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

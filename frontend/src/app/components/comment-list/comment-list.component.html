@@ -1,0 +1,10 @@
+<ul class="comment-list">
+  <li *ngFor="let comment of comments" class="comment">
+    <header>
+      <span class="author">@{{ comment.author.username }}</span>
+      <span class="date">{{ comment.createdAt | date: 'short' }}</span>
+      <button type="button" *ngIf="canDelete(comment)" (click)="delete.emit(comment._id)">Törlés</button>
+    </header>
+    <p>{{ comment.content }}</p>
+  </li>
+</ul>

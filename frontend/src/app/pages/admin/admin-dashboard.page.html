@@ -1,0 +1,45 @@
+<section class="admin-dashboard">
+  <header class="header">
+    <h1>Admin felület</h1>
+    <form (ngSubmit)="onSearch()" class="search">
+      <input type="search" placeholder="Keresés név vagy e-mail alapján" [(ngModel)]="searchTermValue" name="search" />
+      <button type="submit">Keresés</button>
+    </form>
+  </header>
+
+  <p class="error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+
+  <table *ngIf="users().length > 0" class="user-table">
+    <thead>
+      <tr>
+        <th>Felhasználó</th>
+        <th>E-mail</th>
+        <th>Szerep</th>
+        <th>Állapot</th>
+        <th>Műveletek</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of users()">
+        <td>@{{ user.username }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.role }}</td>
+        <td>
+          <span class="badge" [class.suspended]="user.isSuspended">{{ user.isSuspended ? 'Felfüggesztve' : 'Aktív' }}</span>
+        </td>
+        <td class="actions">
+          <button type="button" (click)="toggleSuspension(user)">
+            {{ user.isSuspended ? 'Aktiválás' : 'Felfüggesztés' }}
+          </button>
+          <button type="button" class="danger" (click)="deleteUser(user._id)">Törlés</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p *ngIf="!loading() && users().length === 0" class="muted">Nincs találat.</p>
+
+  <div class="load-more" *ngIf="hasMore()">
+    <button type="button" (click)="loadUsers(false)" [disabled]="loadingMore()">{{ loadingMore() ? 'Töltés...' : 'További felhasználók' }}</button>
+  </div>
+</section>

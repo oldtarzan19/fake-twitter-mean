@@ -1,0 +1,90 @@
+<section class="profile" *ngIf="!loading(); else loadingTpl">
+  <p class="error" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+  <ng-container *ngIf="profileUser() as user">
+    <header class="profile-header">
+      <div>
+        <h1>@{{ user.username }}</h1>
+        <p class="muted">{{ user.email }}</p>
+        <p *ngIf="user.bio">{{ user.bio }}</p>
+        <span class="badge" *ngIf="user.isSuspended">Felfüggesztve</span>
+      </div>
+      <div class="actions" *ngIf="!isOwnProfile()">
+        <button type="button" class="follow" *ngIf="!isFollowing()" (click)="follow()">Követés</button>
+        <button type="button" class="unfollow" *ngIf="isFollowing()" (click)="unfollow()">Követés leállítása</button>
+      </div>
+    </header>
+
+    <section class="stats">
+      <div>
+        <span class="label">Tweetek</span>
+        <span class="value">{{ stats().tweetsCount }}</span>
+      </div>
+      <div>
+        <span class="label">Követők</span>
+        <span class="value">{{ stats().followersCount }}</span>
+      </div>
+      <div>
+        <span class="label">Követések</span>
+        <span class="value">{{ stats().followingCount }}</span>
+      </div>
+    </section>
+
+    <nav class="tabs">
+      <button type="button" [class.active]="activeTab() === 'tweets'" (click)="activeTab.set('tweets')">Tweetek</button>
+      <button type="button" [class.active]="activeTab() === 'followers'" (click)="activeTab.set('followers')">Követők</button>
+      <button type="button" [class.active]="activeTab() === 'following'" (click)="activeTab.set('following')">Követések</button>
+    </nav>
+
+    <div class="tab-content" [ngSwitch]="activeTab()">
+      <div *ngSwitchCase="'tweets'">
+        <app-tweet-composer *ngIf="isOwnProfile()" (create)="createTweet($event)"></app-tweet-composer>
+        <section class="tweet-list" *ngIf="tweets().length > 0; else noTweets">
+          <app-tweet-card
+            *ngFor="let tweet of tweets()"
+            [tweet]="tweet"
+            [canDelete]="isOwnProfile()"
+            (like)="onLike($event)"
+            (unlike)="onUnlike($event)"
+            (retweet)="onRetweet($event)"
+            (unretweet)="onUnretweet($event)"
+            (delete)="deleteTweet($event)"
+          ></app-tweet-card>
+        </section>
+        <ng-template #noTweets>
+          <p class="muted">Nincsenek tweetek.</p>
+        </ng-template>
+        <div class="load-more" *ngIf="hasMoreTweets()">
+          <button type="button" (click)="loadTweets(false)" [disabled]="loadingMoreTweets()">{{ loadingMoreTweets() ? 'Töltés...' : 'További tweetek' }}</button>
+        </div>
+      </div>
+
+      <div *ngSwitchCase="'followers'">
+        <ul class="user-list" *ngIf="followers().length > 0; else noFollowers">
+          <li *ngFor="let follower of followers()">
+            <a [routerLink]="['/profile', follower._id]">@{{ follower.username }}</a>
+            <span class="muted">{{ follower.email }}</span>
+          </li>
+        </ul>
+        <ng-template #noFollowers>
+          <p class="muted">Még nincsenek követők.</p>
+        </ng-template>
+      </div>
+
+      <div *ngSwitchCase="'following'">
+        <ul class="user-list" *ngIf="following().length > 0; else noFollowing">
+          <li *ngFor="let item of following()">
+            <a [routerLink]="['/profile', item._id]">@{{ item.username }}</a>
+            <span class="muted">{{ item.email }}</span>
+          </li>
+        </ul>
+        <ng-template #noFollowing>
+          <p class="muted">Még nem követsz senkit.</p>
+        </ng-template>
+      </div>
+    </div>
+  </ng-container>
+</section>
+
+<ng-template #loadingTpl>
+  <p>Betöltés...</p>
+</ng-template>

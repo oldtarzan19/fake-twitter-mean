@@ -1,0 +1,27 @@
+<section class="tweet-detail">
+  <p class="info" *ngIf="loading()">Betöltés...</p>
+  <p class="info error" *ngIf="!loading() && errorMessage()">{{ errorMessage() }}</p>
+
+  <ng-container *ngIf="!loading() && hasTweet()">
+    <app-tweet-card
+      [tweet]="tweet()!"
+      [showActions]="true"
+      (like)="onLike($event)"
+      (unlike)="onUnlike($event)"
+      (retweet)="onRetweet($event)"
+      (unretweet)="onUnretweet($event)"
+      (delete)="deleteTweet($event)"
+    ></app-tweet-card>
+
+    <section class="comment-composer">
+      <h2>Hozzászólás</h2>
+      <textarea [(ngModel)]="commentText" rows="3" placeholder="Írd meg a véleményed"></textarea>
+      <button type="button" (click)="submitComment()" [disabled]="!commentText.trim()">Küldés</button>
+    </section>
+
+    <section class="comments">
+      <h2>Kommentek</h2>
+      <app-comment-list [comments]="comments()" (delete)="deleteComment($event)"></app-comment-list>
+    </section>
+  </ng-container>
+</section>

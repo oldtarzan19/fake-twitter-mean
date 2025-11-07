@@ -1,0 +1,7 @@
+<section class="composer">
+  <textarea [(ngModel)]="content" [attr.maxLength]="maxLength" rows="3" placeholder="Mi jár a fejedben?"></textarea>
+  <div class="composer-footer">
+    <span>{{ content.length }} / {{ maxLength }}</span>
+    <button type="button" (click)="submit()" [disabled]="!content.trim()">Tweet</button>
+  </div>
+</section>

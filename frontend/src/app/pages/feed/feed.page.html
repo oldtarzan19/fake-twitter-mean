@@ -1,0 +1,28 @@
+<section class="feed-header">
+  <h1>Hírfolyam</h1>
+  <div class="scope-tabs">
+    <button type="button" [class.active]="scope() === 'global'" (click)="switchScope('global')">Globális</button>
+    <button type="button" [class.active]="scope() === 'following'" (click)="switchScope('following')">Követett</button>
+  </div>
+</section>
+
+<app-tweet-composer (create)="createTweet($event)"></app-tweet-composer>
+
+<p class="info" *ngIf="errorMessage()">{{ errorMessage() }}</p>
+<p class="info" *ngIf="!errorMessage() && !loading() && tweets().length === 0">Nincs megjeleníthető tweet.</p>
+
+<section class="tweet-list" *ngIf="tweets().length > 0">
+  <app-tweet-card
+    *ngFor="let tweet of tweets()"
+    [tweet]="tweet"
+    (like)="onLike($event)"
+    (unlike)="onUnlike($event)"
+    (retweet)="onRetweet($event)"
+    (unretweet)="onUnretweet($event)"
+    (delete)="deleteTweet($event)"
+  ></app-tweet-card>
+</section>
+
+<div class="load-more" *ngIf="hasMore()">
+  <button type="button" (click)="loadTweets(false)" [disabled]="loadingMore()">{{ loadingMore() ? 'Töltés...' : 'Továbbiak betöltése' }}</button>
+</div>
