@@ -139,6 +139,24 @@ npm run build  # Production build
 - **Session cookie hiányzik:** a frontend minden HTTP kérésnél `withCredentials: true` beállítással dolgozik; győződj meg róla, hogy a backend `CORS_ORIGINS` tartalmazza a frontend URL-jét.
 - **Angular build hiba WSL alatt:** töröld a `node_modules` mappát és futtasd az `npm install`-t azon a platformon, ahol a buildet végzed (esbuild natív bináris).
 
+## DevOps pipeline & bemutató környezet
+
+A teljes Jenkins → Docker Compose → Nginx → Prometheus/Grafana → Graylog lánc lépéseit a `docs/devops.md` fájl tartalmazza.
+
+**Gyors indítás:**
+```bash
+cp .env.devops.example .env.devops
+# Szerkeszd az .env.devops-t, állítsd be az OPENSEARCH_INITIAL_ADMIN_PASSWORD-öt
+echo "127.0.0.1 app.test" | sudo tee -a /etc/hosts  # Windows: C:\Windows\System32\drivers\etc\hosts
+docker compose -f compose.devops.yml up -d
+```
+
+A repository tartalmaz **production-ready self-signed TLS tanúsítványokat** (SAN-okkal: app.test, localhost, 127.0.0.1, ::1), így minden azonnal működik. A böngésző biztonsági figyelmeztetést fog mutatni, ami **normális és elfogadható** helyi fejlesztéshez és egyetemi bemutatóhoz.
+
+**Opcionálisan**: Az mkcert használatával megbízható tanúsítványokat generálhatsz (részletek a `docs/devops.md`-ben). Az egyetemi értékelés szempontjából mindkét megközelítés érvényes.
+
+Jenkins a `ci/Jenkinsfile`-t használja a pipeline-hoz.
+
 ## Bejelentkezési adatok (seed után)
 
 | Szerep | E-mail | Jelszó |

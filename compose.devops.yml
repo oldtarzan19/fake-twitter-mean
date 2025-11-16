@@ -1,0 +1,218 @@
+name: fake-twitter-devops
+
+services:
+  jenkins:
+    build:
+      context: ./infra/jenkins
+    container_name: fake-jenkins
+    ports:
+      - '8080:8080'
+      - '50000:50000'
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace
+    networks:
+      - devops_net
+
+  mongodb:
+    image: mongo:7.0
+    container_name: fake-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: fake-twitter
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      devops_net:
+        ipv4_address: 172.30.0.10
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: fake-mongo-express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/fake-twitter
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - '8081:8081'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - devops_net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: fake-backend
+    restart: unless-stopped
+    env_file:
+      - .env.devops
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      devops_net:
+        ipv4_address: 172.30.0.20
+    logging:
+      driver: syslog
+      options:
+        syslog-address: udp://127.0.0.1:5140
+        tag: fake-twitter-backend
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: fake-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      devops_net:
+        ipv4_address: 172.30.0.30
+
+  nginx-gateway:
+    build:
+      context: ./infra/nginx
+    container_name: fake-nginx
+    restart: unless-stopped
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./infra/certs:/etc/nginx/certs:ro
+    networks:
+      devops_net:
+        ipv4_address: 172.30.0.40
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: fake-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - '9090:9090'
+    networks:
+      devops_net:
+        ipv4_address: 172.30.0.50
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    container_name: fake-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - '3001:3000'
+    depends_on:
+      - prometheus
+    networks:
+      devops_net:
+        ipv4_address: 172.30.0.60
+
+  opensearch:
+    image: opensearchproject/opensearch:2.17.0
+    container_name: fake-opensearch
+    environment:
+      discovery.type: single-node
+      plugins.security.disabled: 'true'
+      bootstrap.memory_lock: 'true'
+      OPENSEARCH_JAVA_OPTS: '-Xms512m -Xmx512m'
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: ${OPENSEARCH_INITIAL_ADMIN_PASSWORD:-ChangeMeOnce1!}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    ports:
+      - '9200:9200'
+    networks:
+      devops_net:
+        ipv4_address: 172.30.0.70
+
+  graylog-mongo:
+    image: mongo:7.0
+    container_name: fake-graylog-mongo
+    restart: unless-stopped
+    volumes:
+      - graylog_mongo_data:/data/db
+    networks:
+      devops_net:
+        ipv4_address: 172.30.0.71
+
+  graylog:
+    image: graylog/graylog:6.0
+    container_name: fake-graylog
+    restart: unless-stopped
+    environment:
+      GRAYLOG_PASSWORD_SECRET: ${GRAYLOG_PASSWORD_SECRET:-some-long-secret}
+      GRAYLOG_ROOT_PASSWORD_SHA2: ${GRAYLOG_ROOT_PASSWORD_SHA2:-8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918}
+      GRAYLOG_HTTP_EXTERNAL_URI: http://localhost:9000/
+      GRAYLOG_ELASTICSEARCH_VERSION: 7
+      GRAYLOG_MONGODB_URI: mongodb://graylog-mongo:27017/graylog
+      GRAYLOG_ELASTICSEARCH_HOSTS: http://opensearch:9200
+      GRAYLOG_TRANSPORT_EMAIL_ENABLED: 'false'
+    depends_on:
+      graylog-mongo:
+        condition: service_started
+      opensearch:
+        condition: service_started
+    ports:
+      - '9000:9000'
+      - '12201:12201/udp'
+      - '5140:5140/udp'
+    volumes:
+      - graylog_data:/usr/share/graylog/data
+    networks:
+      devops_net:
+        ipv4_address: 172.30.0.80
+
+networks:
+  devops_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  mongo_data:
+  jenkins_home:
+  prometheus_data:
+  grafana_data:
+  opensearch_data:
+  graylog_mongo_data:
+  graylog_data:

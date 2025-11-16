@@ -1,0 +1,89 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+    disableConcurrentBuilds()
+  }
+
+  environment {
+    DOCKER_BUILDKIT = "1"
+    COMPOSE_FILE = "compose.devops.yml"
+  }
+
+  tools {
+    nodejs "node20"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        script {
+          env.SHORT_SHA = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+        }
+      }
+    }
+
+    stage('Frontend CI') {
+      steps {
+        dir('frontend') {
+          sh """
+            npm install
+            npm run lint --if-present
+            npm run build
+          """
+        }
+      }
+    }
+
+    stage('Backend CI') {
+      steps {
+        dir('backend') {
+          sh """
+            npm install
+            npm run build
+          """
+        }
+      }
+    }
+
+    stage('Docker Build') {
+      steps {
+        sh """
+          docker compose -f ${COMPOSE_FILE} build frontend backend nginx-gateway
+        """
+      }
+    }
+
+    stage('Compose Deploy') {
+      steps {
+        sh """
+          cp -n .env.devops.example .env.devops || true
+          docker compose -f ${COMPOSE_FILE} pull || true
+          docker compose -f ${COMPOSE_FILE} up -d --remove-orphans
+        """
+      }
+    }
+
+    stage('Post Checks') {
+      steps {
+        sh '''
+          set -euxo pipefail
+          curl -sk --resolve app.test:443:nginx-gateway https://app.test/api/health
+          curl -sk --resolve app.test:443:nginx-gateway https://app.test/debug_ip
+          curl -s http://prometheus:9090/-/healthy
+          curl -s "http://prometheus:9090/api/v1/targets" | jq '.data.activeTargets | length'
+          echo "<14>1 $(date -u +"%Y-%m-%dT%H:%M:%S.000Z") fake-jenkins cicd - - - Jenkins syslog probe" | nc -u -w1 graylog 5140
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'frontend/dist/**/*, backend/dist/**/*', allowEmptyArchive: true
+    }
+  }
+}
