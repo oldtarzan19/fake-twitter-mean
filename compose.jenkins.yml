@@ -1,0 +1,26 @@
+name: fake-twitter-jenkins
+
+services:
+  jenkins:
+    build:
+      context: ./infra/jenkins
+    container_name: fake-jenkins
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+      - '50000:50000'
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace
+    networks:
+      - fake-twitter-devops_devops_net
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+
+volumes:
+  jenkins_home:
+
+networks:
+  fake-twitter-devops_devops_net:
+    external: true

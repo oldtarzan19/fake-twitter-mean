@@ -92,14 +92,14 @@ services:
         ipv4_address: 172.30.0.40
 
   prometheus:
-    image: prom/prometheus:v2.55.1
+    build:
+      context: ./infra/prometheus
     container_name: fake-prometheus
     restart: unless-stopped
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
     volumes:
-      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     ports:
       - '9090:9090'

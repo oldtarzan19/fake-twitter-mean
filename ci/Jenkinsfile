@@ -52,7 +52,7 @@ pipeline {
     stage('Docker Build') {
       steps {
         sh """
-          docker compose -f ${COMPOSE_FILE} build frontend backend nginx-gateway
+          docker compose -f ${COMPOSE_FILE} build frontend backend nginx-gateway prometheus
         """
       }
     }
