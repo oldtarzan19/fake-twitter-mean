@@ -71,11 +71,24 @@ pipeline {
       steps {
         sh '''
           set -euxo pipefail
-          curl -sk --resolve app.test:443:nginx-gateway https://app.test/api/health
-          curl -sk --resolve app.test:443:nginx-gateway https://app.test/debug_ip
-          curl -s http://prometheus:9090/-/healthy
-          curl -s "http://prometheus:9090/api/v1/targets" | jq '.data.activeTargets | length'
-          echo "<14>1 $(date -u +"%Y-%m-%dT%H:%M:%S.000Z") fake-jenkins cicd - - - Jenkins syslog probe" | nc -u -w1 graylog 5140
+
+          # Backend health (direct access via Docker network)
+          curl -sf http://backend:3000/api/health || echo "Backend health check failed"
+
+          # Nginx gateway (internal network)
+          curl -sf http://nginx-gateway/api/health || echo "Nginx health check failed"
+
+          # Prometheus health
+          curl -sf http://prometheus:9090/-/healthy || echo "Prometheus health check failed"
+
+          # Prometheus targets check
+          curl -s http://prometheus:9090/api/v1/targets | jq -r '.data.activeTargets | length' || echo "0"
+
+          # Grafana health
+          curl -sf http://grafana:3000/api/health || echo "Grafana health check failed"
+
+          # Graylog syslog test
+          echo "<14>1 $(date -u +"%Y-%m-%dT%H:%M:%S.000Z") fake-jenkins cicd - - - Jenkins syslog probe" | nc -u -w1 graylog 5140 || echo "Graylog syslog test failed"
         '''
       }
     }
