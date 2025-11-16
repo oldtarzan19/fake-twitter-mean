@@ -1,20 +1,6 @@
 name: fake-twitter-devops
 
 services:
-  jenkins:
-    build:
-      context: ./infra/jenkins
-    container_name: fake-jenkins
-    ports:
-      - '8080:8080'
-      - '50000:50000'
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-      - .:/workspace
-    networks:
-      - devops_net
-
   mongodb:
     image: mongo:7.0
     container_name: fake-mongodb
@@ -210,7 +196,6 @@ networks:
 
 volumes:
   mongo_data:
-  jenkins_home:
   prometheus_data:
   grafana_data:
   opensearch_data:
