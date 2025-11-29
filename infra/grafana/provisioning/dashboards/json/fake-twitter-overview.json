@@ -68,7 +68,7 @@
       },
       "targets": [
         {
-          "expr": "rate(fake_twitter_http_request_duration_seconds_count[1m])",
+          "expr": "rate(http_request_duration_seconds_count[1m])",
           "legendFormat": "{{method}} {{route}}",
           "refId": "A"
         }
