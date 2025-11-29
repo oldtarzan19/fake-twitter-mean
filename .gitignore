@@ -18,3 +18,5 @@ backend/.env
 .vscode/
 .idea/
 .DS_Store
+
+.env.devops
