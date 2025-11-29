@@ -74,7 +74,8 @@ services:
 
   nginx-gateway:
     build:
-      context: ./infra/nginx
+      context: ./infra
+      dockerfile: nginx/Dockerfile
     container_name: fake-nginx
     restart: unless-stopped
     depends_on:
@@ -85,8 +86,6 @@ services:
     ports:
       - '80:80'
       - '443:443'
-    volumes:
-      - ./infra/certs:/etc/nginx/certs:ro
     networks:
       devops_net:
         ipv4_address: 172.30.0.40
