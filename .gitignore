@@ -20,3 +20,5 @@ backend/.env
 .DS_Store
 
 .env.devops
+
+.claude
