@@ -112,7 +112,7 @@ export class ProfilePage implements OnInit {
   async createTweet(content: string): Promise<void> {
     try {
       const response = await firstValueFrom(this.tweetService.createTweet({ content }));
-      if (response.tweet.author._id === this.profileUser()?._id) {
+      if (response.tweet.author?._id === this.profileUser()?._id) {
         this.tweets.update((prev) => [response.tweet, ...prev]);
         this.stats.update((prev) => ({ ...prev, tweetsCount: prev.tweetsCount + 1 }));
       }

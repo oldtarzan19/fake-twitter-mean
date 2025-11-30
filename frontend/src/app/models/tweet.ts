@@ -2,7 +2,7 @@ import { User } from './user';
 
 export interface Tweet {
   _id: string;
-  author: User;
+  author: User | null;
   content: string;
   replyTo?: string | null;
   likesCount: number;
@@ -17,7 +17,7 @@ export interface Tweet {
 export interface Comment {
   _id: string;
   tweet: string;
-  author: User;
+  author: User | null;
   content: string;
   createdAt: string;
   updatedAt: string;

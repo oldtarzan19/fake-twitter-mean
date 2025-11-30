@@ -107,7 +107,8 @@ services:
         ipv4_address: 172.30.0.50
 
   grafana:
-    image: grafana/grafana:11.2.2
+    build:
+      context: ./infra/grafana
     container_name: fake-grafana
     restart: unless-stopped
     environment:
@@ -116,7 +117,6 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: 'false'
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./infra/grafana/provisioning:/etc/grafana/provisioning
     ports:
       - '3001:3000'
     depends_on:

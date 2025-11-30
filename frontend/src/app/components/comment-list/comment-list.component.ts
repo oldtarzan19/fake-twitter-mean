@@ -18,7 +18,7 @@ export class CommentListComponent {
 
   canDelete(comment: Comment): boolean {
     const user = this.auth.user();
-    if (!user) {
+    if (!user || !comment.author) {
       return false;
     }
     return user.role === 'admin' || user._id === comment.author._id;

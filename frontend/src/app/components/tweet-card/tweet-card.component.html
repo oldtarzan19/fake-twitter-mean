@@ -1,10 +1,16 @@
 <article class="tweet-card">
   <header class="tweet-header">
     <div class="author">
-      <a [routerLink]="['/profile', tweet.author._id]" class="username">@{{ tweet.author.username }}</a>
-      <span class="meta">· {{ tweet.createdAt | date: 'short' }}</span>
+      <ng-container *ngIf="tweet.author; else deletedUser">
+        <a [routerLink]="['/profile', tweet.author._id]" class="username">@{{ tweet.author.username }}</a>
+        <span class="meta">· {{ tweet.createdAt | date: 'short' }}</span>
+      </ng-container>
+      <ng-template #deletedUser>
+        <span class="username deleted">@[törölt felhasználó]</span>
+        <span class="meta">· {{ tweet.createdAt | date: 'short' }}</span>
+      </ng-template>
     </div>
-    <button type="button" class="delete" *ngIf="canDelete || auth.user()?.role === 'admin' || auth.user()?._id === tweet.author._id" (click)="onDeleteClick()">
+    <button type="button" class="delete" *ngIf="canDelete || auth.user()?.role === 'admin' || (tweet.author && auth.user()?._id === tweet.author._id)" (click)="onDeleteClick()">
       Törlés
     </button>
   </header>
