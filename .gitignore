@@ -21,4 +21,8 @@ backend/.env
 
 .env.devops
 
+# AI/LLM files
 .claude
+AGENTS.md
+PROMPTS.md
+*.prompt.md
