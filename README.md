@@ -213,7 +213,7 @@ mkcert -cert-file infra/certs/app.test.pem \
        -key-file infra/certs/app.test-key.pem \
        app.test localhost 127.0.0.1 ::1
 
-# Nginx újraindítása
+# Nginx újraindítása (ha nem működik akkor rebuild)
 docker compose -f compose.devops.yml restart nginx-gateway
 ```
 
